@@ -1,0 +1,60 @@
+<!doctype html>
+<meta charset="utf-8">
+<script src="../js/distill.js"></script>
+
+<script type="text/front-matter">
+  title: "Daily"
+</script>
+
+<style>
+  .daily-entry {
+    margin: 4px 0;
+  }
+  .daily-entry.missing {
+    color: #aaa;
+  }
+  .daily-entry .date-label {
+    font-family: monospace;
+  }
+</style>
+
+<dt-article class="left">
+  <h1>Daily</h1>
+
+  <p><a href="index.html">Back to writing</a></p>
+
+  <p>Short thoughts, posted (ideally) every day.</p>
+
+  <div id="daily-list"></div>
+</dt-article>
+
+<script>
+  // Add entries here when you post. Format: "YYYY-MM-DD": "Title"
+  const posts = {
+    "2026-03-17": "Momentum",
+  };
+
+  const startDate = new Date("2026-03-17");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const container = document.getElementById("daily-list");
+
+  for (let d = new Date(Math.max(today, startDate)); d >= startDate; d.setDate(d.getDate() - 1)) {
+    const key = d.toISOString().slice(0, 10);
+    const [year, month, day] = key.split("-");
+    const label = `[${month}/${day}/${year}]`;
+
+    const p = document.createElement("p");
+    p.className = "daily-entry";
+
+    if (posts[key]) {
+      p.innerHTML = `<span class="date-label">${label}</span> <a href="daily/${key}.html">${posts[key]}</a>`;
+    } else {
+      p.className += " missing";
+      p.innerHTML = `<span class="date-label">${label}</span> I did not write anything today.`;
+    }
+
+    container.appendChild(p);
+  }
+</script>
