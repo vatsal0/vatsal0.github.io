@@ -31,6 +31,7 @@
 <script>
   // Add entries here when you post. Format: "YYYY-MM-DD": "Title"
   const posts = {
+    "2026-03-18": "Identity Gap",
     "2026-03-17": "Momentum",
   };
 
@@ -40,7 +41,9 @@
 
   const container = document.getElementById("daily-list");
 
-  for (let d = new Date(Math.max(today, startDate)); d >= startDate; d.setDate(d.getDate() - 1)) {
+  const todayKey = today.toISOString().slice(0, 10);
+
+  for (let d = new Date(today); d >= startDate; d.setDate(d.getDate() - 1)) {
     const key = d.toISOString().slice(0, 10);
     const [year, month, day] = key.split("-");
     const label = `[${month}/${day}/${year}]`;
@@ -48,7 +51,7 @@
     const p = document.createElement("p");
     p.className = "daily-entry";
 
-    if (posts[key]) {
+    if (posts[key] && key <= todayKey) {
       p.innerHTML = `<span class="date-label">${label}</span> <a href="daily/${key}.html">${posts[key]}</a>`;
     } else {
       p.className += " missing";
