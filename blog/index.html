@@ -31,6 +31,7 @@
 
 <script src="daily/posts.js"></script>
 <script>
+  const showMissingDays = false;
   const startDate = new Date("2026-03-17");
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -65,17 +66,19 @@
       while (j < days.length && !(posts[days[j]] && days[j] <= todayKey)) {
         j++;
       }
-      const runStart = days[i];    // newer date (top of run)
-      const runEnd = days[j - 1];  // older date (bottom of run)
-      const p = document.createElement("p");
-      p.className = "entry";
-      p.style.color = "#aaa";
-      if (runStart === runEnd) {
-        p.innerHTML = `[${fmt(runStart)}] I did not write anything today.`;
-      } else {
-        p.innerHTML = `[${fmt(runEnd)} – ${fmt(runStart)}] I did not write anything on these days.`;
+      if (showMissingDays) {
+        const runStart = days[i];    // newer date (top of run)
+        const runEnd = days[j - 1];  // older date (bottom of run)
+        const p = document.createElement("p");
+        p.className = "entry";
+        p.style.color = "#aaa";
+        if (runStart === runEnd) {
+          p.innerHTML = `[${fmt(runStart)}] I did not write anything today.`;
+        } else {
+          p.innerHTML = `[${fmt(runEnd)} – ${fmt(runStart)}] I did not write anything on these days.`;
+        }
+        container.appendChild(p);
       }
-      container.appendChild(p);
       i = j;
     }
   }
