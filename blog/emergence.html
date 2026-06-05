@@ -112,6 +112,7 @@
 <nav id="toc" aria-label="Table of contents">
   <h3>Contents</h3>
   <div><a href="#intro">The Curious Case of Emergent Capabilities</a></div>
+  <div><a href="#attention">What Happens When a Capability Emerges?</a></div>
 </nav>
 
 <d-article>
@@ -143,7 +144,27 @@
 
   <p>Although we have a very limited understanding of the inner workings of deep neural networks, at a macroscopic level neural scaling trends are <a href="https://arxiv.org/abs/1712.00409">surprisingly</a> <a href="https://arxiv.org/abs/2001.08361">very</a> <a href="https://arxiv.org/abs/2010.14701">predictable</a>. But scaling laws typically model pretraining loss; in reality, we judge LLM progress by their downstream capabilities. And these capabilities, historically, have not been so predictable. For example, <a href="https://arxiv.org/abs/2005.14165">GPT-3</a> resembled a step-function-like jump in in-context learning capability that no one saw coming. Many such <a href="https://arxiv.org/abs/2206.07682">emergent abilities</a> have been widely documented in the past few years: as we continue to scale LLMs, new downstream capabilities emerge that were barely (or not at all) present in smaller models. Why are larger models' capabilities so qualitatively different? And is this emergence truly random, or can we interpret what factors drive the acquisition of these capabilities?</p>
 
-  <p>One major confounding factor in studying emergent capabilities is the effect of <i>randomness</i>. It is not always the case that a smaller model "never" acquires a capability and a larger model "always" does; whether a capability is realized <a href="https://arxiv.org/abs/2502.17356v5">depends heavily on the random initialization of the model.</a> </p>
+  <p>One major confounding factor in studying emergent capabilities is the effect of <i>randomness</i>. It is not quite the case that a smaller model "never" acquires a capability and a larger model "always" does; whether a capability is realized <a href="https://arxiv.org/abs/2502.17356v5">depends heavily on the random initialization of the model</a>. We can interpret the effect of model scale as increasing the <i>probability</i> with which a model acquires a capability. But this raises another question: why is emergence so seed-dependent in the first place?</p>
+
+  <p>Even if we ignore the parameter scaling axis and focus on a single training run, we cannot predict when specifically a capability will show up in a model. Capabilities tend to emerge <i>abruptly</i>: see <a href="https://arxiv.org/abs/2209.11895">induction heads</a> for example, where a model learns a core attention primitive that enables massive improvement for in-context learning. Specifically, this primitive is quickly learned in a short span of training, with minimal improvement before or after this span. In this way, acquiring a capability feels like a phase change, where <a href="https://simons.berkeley.edu/talks/naomi-saphra-kempner-institute-harvard-university-2025-02-05">"you know it or you don't"</a>, and the transition between "not knowing" and "knowing" is almost instant. Note the relevance of a key attention pattern -- this will be a central component of our analysis.</p>
+
+  <p>So far, we know that emergent capabilities arise quite abruptly, and whether or not they emerge at a given model scale is heavily influenced by randomness. But in both cases, we don't know *why* models behave this way. We begin by investigating the following question: what actually <i>changes</i> in a model during this sudden, seemingly random period of emergence?</p>
+
+  <h2 id="attention">What Happens When a Capability Emerges?</h2>
+
+  <p>we look at pythia models, we can zoom in on where a capability emerges, take the checkpoint before and after. our hypothesis is that attention heads are key. what happens when we swap in attention patterns from the new model into the old model? pick the ones that have the highest effect on correct answer prob. these are actually very interpretable and correspond to the task. left: we confirm that whether a capability emerges depends on seed. we additionally show that WHEN it emerges is seed-dependent. and larger models not only tend to learn it more often, but also faster on average. also: show other capabilities w/ their causal ablation</p>
+
+  <h2 id="synthetic">Controlling Attention Pattern Learning With Synthetic Tasks</h2>
+
+  <p>ok we saw in pythia models there are interpretable patterns we discover on some real tasks. but we don't really know a ground truth in advance. so hard to study factors in detail. so we move to synthetic tasks, we can control ctx length, sparsity, etc easily. in pythia we saw if there is a jump in performance, it corresponds to attention map learning. here we also see the same. TODO add the 3 context length / sparsity figures</p>
+
+  <h2 id="arch">How Architectures Affect Attention Pattern Learning</h2>
+
+  <p>results on heads, mlp mixer, etc</p>
+
+  <h2 id="discussion">Future Directions</h2>
+
+  <p>we saw emergence is bottlenecked by attention pattern learning, which is esp hard for complex and long ctx. can we design better architectures, attention interventions for long ctx tasks, or distillation specifically for attention maps? since smaller models with less heads tend to struggle at capturing intricate patterns</p>
 
   <figure class="fig">
     <img src="../images/emergence/emergence-1.png" alt="Emergence is random and abrupt, and coincides with attention pattern learning">
