@@ -1,0 +1,228 @@
+<!doctype html>
+<meta charset="utf-8">
+<script src="../js/distill.template.v2.js"></script>
+
+<d-front-matter>
+  <script type="text/json">
+  {
+    "title": "Why Capabilities Emerge Randomly",
+    "description": "Language model capabilities appear at random, unpredictable moments in training, and when they do appear, the improvement is sharp and abrupt. Both behaviors trace back to a single bottleneck: learning which tokens attention should focus on.",
+    "published": "2026-06-04",
+    "authors": []
+  }
+  </script>
+</d-front-matter>
+
+<style>
+  d-title p.home-link { font-size: 14px; margin-bottom: 8px; }
+
+  /* Custom byline, styled to match Distill v2's native d-byline. */
+  .byline {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-column-gap: 24px; grid-row-gap: 1em;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    font-size: 0.8rem; line-height: 1.8em;
+    padding: 1.5rem 0; margin-bottom: 1.5rem; color: rgba(0, 0, 0, 0.8);
+  }
+  .byline .authors-affiliations {
+    grid-column-end: span 2;
+    display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 24px;
+  }
+  .byline .authors-col p, .byline .affiliation-col p { margin: 0; }
+  .byline .label {
+    display: block;
+    font-size: 0.6rem; font-weight: 400; color: rgba(0, 0, 0, 0.5);
+    margin: 0 0 0.2em 0; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .byline p { margin: 0; }
+  .byline p.author { font-weight: 500; }
+  .byline p.author sup { font-weight: 400; color: rgba(0,0,0,0.5); }
+  .byline a { color: rgba(0, 0, 0, 0.8); text-decoration: none; border-bottom: none; }
+  .byline a:hover { text-decoration: underline; }
+  .byline .byline-info {
+    grid-column: 1 / -1;
+    margin-top: 0.4em; font-size: 0.7rem; color: rgba(0, 0, 0, 0.5);
+  }
+  @media (min-width: 768px) {
+    .byline { grid-template-columns: repeat(3, 1fr); }
+    .byline .authors-affiliations { grid-column-end: span 2; }
+  }
+
+  .links-row { font-size: 15px; }
+  .links-row a { margin-right: 4px; }
+
+  /* Table of contents. Inline at the top of the text column by default;
+     pinned to the left margin (persists while scrolling) on wide screens. */
+  #toc {
+    font-size: 13px; line-height: 1.5;
+    margin: 0 24px 2.4rem 24px; box-sizing: border-box;
+  }
+  /* Below 1080px the Distill text column shifts around; the inline TOC
+     can look misaligned, so only show it once the layout settles. */
+  @media (max-width: 1079px) { #toc { display: none; } }
+  @media (min-width: 1080px) {
+    /* Match Distill's page-centered text column (≈704px wide). */
+    #toc { width: 704px; margin-left: auto; margin-right: auto; }
+  }
+  #toc h3 {
+    margin: 0 0 0.7em 0; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em; color: rgba(0,0,0,0.5); border: none;
+  }
+  #toc > div { margin: 0.45em 0; }
+  #toc a { color: rgba(0,0,0,0.55); text-decoration: none; border: none; }
+  #toc a:hover { color: #000; }
+  #toc a.active { color: #000; font-weight: 600; }
+
+  /* Wide screens: fixed to the left of the centered text column, with a
+     vertical rule separating it from the article text. The vertical offset
+     (`top`) is driven by JS: it starts aligned with the post body and snaps
+     to the viewport top as you scroll down.
+     The text column is ~648px wide and centered, so its left edge is at
+     calc(50% - 324px); we place a 220px nav to the left of that with a gap. */
+  @media (min-width: 1300px) {
+    #toc {
+      position: fixed;
+      top: 0; left: calc(50% - 324px - 56px - 220px);
+      width: 220px; max-width: 220px;
+      margin: 0; padding: 0 24px 24px 0;
+      border-right: 1px solid rgba(0, 0, 0, 0.1);
+      overflow-y: auto; max-height: 100vh;
+    }
+  }
+
+  d-article figure.fig { margin: 30px 0; }
+  d-article figure.fig img { display: block; width: 100%; height: auto; }
+  d-article figure.fig figcaption {
+    font-size: 13px; color: rgba(0,0,0,0.6); line-height: 1.5;
+    margin-top: 10px;
+  }
+</style>
+
+<d-title>
+  <p class="home-link"><a href="index.html">← Back</a></p>
+  <h1>Why Capabilities Emerge Randomly</h1>
+  <p>Language model capabilities appear at random, unpredictable moments in training, and when they do appear, the improvement is sharp and abrupt. Both behaviors trace back to a single bottleneck: learning which tokens attention should focus on.</p>
+</d-title>
+
+<!-- Empty hidden byline so the v2 template does not auto-inject its own
+     (with DOI + blank author columns); we render a custom one below. -->
+<d-byline style="display:none"></d-byline>
+
+<nav id="toc" aria-label="Table of contents">
+  <h3>Contents</h3>
+  <div><a href="#intro">The Curious Case of Emergent Capabilities</a></div>
+</nav>
+
+<d-article>
+  <div class="byline">
+    <div class="authors-affiliations">
+      <div class="authors-col">
+        <span class="label">Authors</span>
+        <p class="author"><a href="https://vatsal0.github.io">Vatsal Baherwani</a><sup>‡</sup></p>
+        <p class="author"><a href="https://charliezchen.github.io/">Zixi Chen</a></p>
+        <p class="author"><a href="https://shikaiqiu.github.io/">Shikai Qiu</a></p>
+        <p class="author"><a href="https://cims.nyu.edu/~andrewgw/">Andrew Gordon Wilson</a></p>
+        <p class="author"><a href="https://izmailovpavel.github.io">Pavel Izmailov</a></p>
+      </div>
+      <div class="affiliation-col">
+        <span class="label">Affiliation</span>
+        <p><a href="https://nyu.edu">New York University</a></p>
+      </div>
+    </div>
+    <div>
+      <span class="label">Published</span>
+      <p>June 4, 2026</p>
+    </div>
+    <p class="byline-info">‡ Correspondence to <a href="mailto:vatsalbaherwani@nyu.edu">vatsalbaherwani@nyu.edu</a></p>
+  </div>
+
+  <p class="links-row"><a href="#">Paper</a> &nbsp;·&nbsp; <a href="#">Code</a></p>
+
+  <h2 id="intro">The Curious Case of Emergent Capabilities</h2>
+
+  <p>Although we have a very limited understanding of the inner workings of deep neural networks, at a macroscopic level neural scaling trends are <a href="https://arxiv.org/abs/1712.00409">surprisingly</a> <a href="https://arxiv.org/abs/2001.08361">very</a> <a href="https://arxiv.org/abs/2010.14701">predictable</a>. But scaling laws typically model pretraining loss; in reality, we judge LLM progress by their downstream capabilities. And these capabilities, historically, have not been so predictable. For example, <a href="https://arxiv.org/abs/2005.14165">GPT-3</a> resembled a step-function-like jump in in-context learning capability that no one saw coming. Many such <a href="https://arxiv.org/abs/2206.07682">emergent abilities</a> have been widely documented in the past few years: as we continue to scale LLMs, new downstream capabilities emerge that were barely (or not at all) present in smaller models. Why are larger models' capabilities so qualitatively different? And is this emergence truly random, or can we interpret what factors drive the acquisition of these capabilities?</p>
+
+  <p>One major confounding factor in studying emergent capabilities is the effect of <i>randomness</i>. It is not always the case that a smaller model "never" acquires a capability and a larger model "always" does; whether a capability is realized <a href="https://arxiv.org/abs/2502.17356v5">depends heavily on the random initialization of the model.</a> </p>
+
+  <figure class="fig">
+    <img src="../images/emergence/emergence-1.png" alt="Emergence is random and abrupt, and coincides with attention pattern learning">
+    <figcaption><b>Capabilities emerge randomly and abruptly as the model learns attention patterns.</b> Left: copies of the same model with different seeds learn a repetition task at scattered points in training, and larger models learn earlier on average (dashed line). The grey X marks models that never learned it. Right: the probability of the correct token stays flat and then spikes, exactly when two attention heads switch from looking everywhere to looking in the right place.</figcaption>
+  </figure>
+
+  <figure class="fig">
+    <img src="../images/emergence/tasks-1.png" alt="Linear map and cellular automata tasks">
+    <figcaption><b>Two tasks where we know exactly where the model should look.</b> Each task transforms a row of cells into the next row. Orange cells are the ones that determine a single output cell. In the linear map task (left) each output is the parity of a fixed, scattered subset of inputs. In the cellular automata task (right) each output depends on a small local window. To solve either task, the model has to learn to attend to the orange cells.</figcaption>
+  </figure>
+
+  <figure class="fig">
+    <img src="../images/emergence/jumps-1.png" alt="Loss jumps correspond to learning rows of the ground-truth pattern">
+    <figcaption><b>Each jump in the loss is the model learning one more place to look.</b> The dashed line is the overall loss; the light blue lines are the losses on individual output cells. The cells fall one at a time, in sudden drops, and each drop lines up with two attention heads sharpening onto a single row of the true pattern.</figcaption>
+  </figure>
+
+  <figure class="fig">
+    <img src="../images/emergence/width-1.png" alt="Scaling the number of heads improves learning">
+    <figcaption><b>More heads help more than bigger heads.</b> On the linear map task, adding attention heads steadily lowers the final loss. A model with many tiny heads beats a model with a few large ones, even at the same total width, which fits the idea that each head is an independent search for the right pattern.</figcaption>
+  </figure>
+
+  <figure class="fig">
+    <img src="../images/emergence/arch_linmap-1.png" alt="MLP-Mixer outperforms a transformer on the linear map task">
+    <figcaption><b>A simpler mixing mechanism wins when the pattern is fixed.</b> As the linear map gets harder, the transformer struggles while the MLP-Mixer keeps solving it. The Mixer can write the fixed pattern down directly instead of discovering it through queries and keys.</figcaption>
+  </figure>
+
+</d-article>
+
+<d-appendix>
+  <h3>Acknowledgments</h3>
+  <p>Thanks for reading. Comments and corrections are welcome.</p>
+</d-appendix>
+
+<script>
+  // Table-of-contents behavior:
+  //  (1) Scroll-spy: highlight the entry for the section currently in view.
+  //  (2) Position: start the TOC aligned with where the post body begins,
+  //      then snap it to the top of the viewport as the page scrolls up.
+  window.addEventListener('load', function () {
+    var toc = document.getElementById('toc');
+    var links = Array.prototype.slice.call(
+      document.querySelectorAll('#toc a'));
+    if (!toc || !links.length) return;
+    var sections = links
+      .map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); })
+      .filter(Boolean);
+
+    // Reference point: where the post body starts (top of the byline block).
+    var anchor = document.querySelector('d-article .byline') ||
+                 document.querySelector('d-article');
+    var SNAP_TOP = 24; // gap from viewport top once snapped
+
+    function isFixed() {
+      return getComputedStyle(toc).position === 'fixed';
+    }
+
+    function onScroll() {
+      // (1) active-section highlight
+      var pos = window.scrollY + window.innerHeight * 0.25;
+      var current = sections[0];
+      for (var i = 0; i < sections.length; i++) {
+        if (sections[i].offsetTop <= pos) current = sections[i];
+      }
+      links.forEach(function (a) {
+        a.classList.toggle(
+          'active', a.getAttribute('href') === '#' + current.id);
+      });
+
+      // (2) follow the post body, then snap to the top
+      if (isFixed() && anchor) {
+        var anchorTop = anchor.getBoundingClientRect().top; // relative to viewport
+        toc.style.top = Math.max(SNAP_TOP, anchorTop) + 'px';
+      } else {
+        toc.style.top = '';
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    onScroll();
+  });
+</script>
