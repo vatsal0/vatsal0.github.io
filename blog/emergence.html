@@ -97,6 +97,22 @@
     font-size: 13px; color: rgba(0,0,0,0.6); line-height: 1.5;
     margin-top: 10px;
   }
+  /* Multi-panel figure: images in a row, single shared caption below. */
+  d-article figure.fig .panels {
+    display: flex; justify-content: center; align-items: flex-end; gap: 12px;
+    width: 100%;
+  }
+  /* Equal height across panels: each img's flex-basis is proportional to its
+     aspect ratio (width/height), so they share the row width while rendering
+     at the same height. Ratios: states_linmap 1.64, states_ca 1.65, plateau 1.44. */
+  d-article figure.fig .panels img { width: 100%; height: auto; min-width: 0; }
+  d-article figure.fig .panels img:nth-child(1) { flex: 1.64 1 0; }
+  d-article figure.fig .panels img:nth-child(2) { flex: 1.65 1 0; }
+  d-article figure.fig .panels img:nth-child(3) { flex: 1.44 1 0; }
+  @media (max-width: 600px) {
+    d-article figure.fig .panels { flex-direction: column; align-items: center; }
+    d-article figure.fig .panels img { flex: none; width: 100%; }
+  }
 </style>
 
 <d-title>
@@ -142,44 +158,71 @@
 
   <h2 id="intro">The Curious Case of Emergent Capabilities</h2>
 
-  <p>Although we have a very limited understanding of the inner workings of deep neural networks, at a macroscopic level neural scaling trends are <a href="https://arxiv.org/abs/1712.00409">surprisingly</a> <a href="https://arxiv.org/abs/2001.08361">very</a> <a href="https://arxiv.org/abs/2010.14701">predictable</a>. But scaling laws typically model pretraining loss; in reality, we judge LLM progress by their downstream capabilities. And these capabilities, historically, have not been so predictable. For example, <a href="https://arxiv.org/abs/2005.14165">GPT-3</a> resembled a step-function-like jump in in-context learning capability that no one saw coming. Many such <a href="https://arxiv.org/abs/2206.07682">emergent abilities</a> have been widely documented in the past few years: as we continue to scale LLMs, new downstream capabilities emerge that were barely (or not at all) present in smaller models. Why are larger models' capabilities so qualitatively different? And is this emergence truly random, or can we interpret what factors drive the acquisition of these capabilities?</p>
+  <p>Although we have a very limited understanding of the inner workings of deep neural networks, at a macroscopic level neural scaling trends for pretraining performance are <a href="https://arxiv.org/abs/1712.00409">surprisingly</a> <a href="https://arxiv.org/abs/2001.08361">very</a> <a href="https://arxiv.org/abs/2010.14701">predictable</a>. But in reality we don't judge LLMs by their pretraining loss; rather, we care about whether they can solve practical downstream tasks. And these practical capabilities, historically, have not been so predictable. For example, <a href="https://arxiv.org/abs/2005.14165">GPT-3</a> resembled a step-function-like jump in in-context learning capability that no one saw coming. Many such <a href="https://arxiv.org/abs/2206.07682">emergent abilities</a> have been widely documented in the past few years: as we continue to scale LLMs, new capabilities emerge that were barely (or not at all) present in smaller models. Why are larger models' capabilities so qualitatively different? And is this emergence truly random, or can we interpret what factors drive the acquisition of these capabilities?</p>
 
-  <p>One major confounding factor in studying emergent capabilities is the effect of <i>randomness</i>. It is not quite the case that a smaller model "never" acquires a capability and a larger model "always" does; whether a capability is realized <a href="https://arxiv.org/abs/2502.17356v5">depends heavily on the random initialization of the model</a>. We can interpret the effect of model scale as increasing the <i>probability</i> with which a model acquires a capability. But this raises another question: why is emergence so seed-dependent in the first place?</p>
+  <p>One major confounding factor in studying emergent capabilities is the effect of <i>randomness</i>. It is not quite the case that a smaller model "never" acquires a capability and a larger model "always" does; whether a capability is realized <a href="https://arxiv.org/abs/2502.17356">depends heavily on the random initialization of the model</a>. We can interpret the effect of model scale as increasing the <i>probability</i> with which a model acquires a capability. But this raises another question: why is emergence so seed-dependent in the first place?</p>
 
-  <p>Even if we ignore the parameter scaling axis and focus on a single training run, we cannot predict when specifically a capability will show up in a model. Capabilities tend to emerge <i>abruptly</i>: see <a href="https://arxiv.org/abs/2209.11895">induction heads</a> for example, where a model learns a core attention primitive that enables massive improvement for in-context learning. Specifically, this primitive is quickly learned in a short span of training, with minimal improvement before or after this span. In this way, acquiring a capability feels like a phase change, where <a href="https://simons.berkeley.edu/talks/naomi-saphra-kempner-institute-harvard-university-2025-02-05">"you know it or you don't"</a>, and the transition between "not knowing" and "knowing" is almost instant. Note the relevance of a key attention pattern -- this will be a central component of our analysis.</p>
+  <p>Even if we ignore the parameter scaling axis and focus on a single training run, we cannot predict when specifically a capability will show up in a model. Capabilities tend to emerge <i>abruptly</i>: see <a href="https://arxiv.org/abs/2209.11895">induction heads</a> for example, where a model learns a core attention primitive that enables massive improvement for in-context learning. Specifically, this primitive is quickly learned in a short span of training, with minimal improvement before or after this span. In this way, acquiring a capability feels like a phase change, where <a href="https://simons.berkeley.edu/talks/naomi-saphra-kempner-institute-harvard-university-2025-02-05">"you know it or you don't"</a> and the transition between "not knowing" and "knowing" is almost instant. Note the relevance of a key attention pattern &mdash; this will be a central component of our analysis.</p>
 
-  <p>So far, we know that emergent capabilities arise quite abruptly, and whether or not they emerge at a given model scale is heavily influenced by randomness. But in both cases, we don't know *why* models behave this way. We begin by investigating the following question: what actually <i>changes</i> in a model during this sudden, seemingly random period of emergence?</p>
+  <p>So far, we know that emergent capabilities arise quite abruptly, and whether or not they emerge at a given model scale is heavily influenced by randomness. But in both cases, we don't know <i>why</i> models behave this way. We begin by investigating the following question: what actually <i>changes</i> in a model during this sudden, seemingly random period of emergence?</p>
 
   <h2 id="attention">What Happens When a Capability Emerges?</h2>
 
-  <p>we look at pythia models, we can zoom in on where a capability emerges, take the checkpoint before and after. our hypothesis is that attention heads are key. what happens when we swap in attention patterns from the new model into the old model? pick the ones that have the highest effect on correct answer prob. these are actually very interpretable and correspond to the task. left: we confirm that whether a capability emerges depends on seed. we additionally show that WHEN it emerges is seed-dependent. and larger models not only tend to learn it more often, but also faster on average. also: show other capabilities w/ their causal ablation</p>
+  <p>We begin by reproducing the <a href="https://arxiv.org/abs/2502.17356">random scaling of emergent capabilities</a> demonstrated by Zhao et al. We evaluate training checkpoints from the <a href="https://arxiv.org/abs/2304.01373">Pythia suite</a>, which includes models trained with 10 random initializations for each parameter scale. Although we look at a smaller number of random seeds than Zhao et al., using Pythia models enables us to study performance on realistic natural language tasks. In Figure 1 we illustrate a simple copying task: the model is given a string of numbers, along with the same partially repeated string, and it must predict the final token to complete the repetition. We say a model has "solved" this task if its greedy output matches the correct next token.  On the left plot we confirm that whether or not a model solves this task depends heavily on the random seed, and the probability of solving the task increases with model scale. Because Pythia models include checkpoints at every 1000-step interval, we can also track down <i>when</i> each model learns to solve the task. Interestingly, larger models are not only more likely to acquire this copying capability, but they also learn it much earlier on average.
+
+  <p>In Figure 1 (right) we track task performance &mdash; the model's <i>probability</i> of predicting the correct next token &mdash; across training steps for a single 410M Pythia model. It turns out that this probability stays near zero for most of training. But in a very short interval, the probability shoots up to ~0.6, enabling the model to suddenly solve the task! Note this is a sharp jump in a smooth, continuous metric, so it isn't <a href="https://arxiv.org/abs/2304.15004">an artifact of a thresholded accuracy score</a>. We call this abrupt transition the <i>point of emergence</i>. What changed during model training that led to this sudden spike in task performance? This "abrupt learning" phenomenon has been documented in <a href="https://arxiv.org/abs/2410.22244">prior</a> <a href="https://arxiv.org/abs/2506.13688">works</a> specifically focusing on pretraining with algorithmic tasks, and their results show that abruptness corresponds to the model discovering a key task-relevant attention pattern. Let's see if our model also discovered any relevant attention patterns in this short interval of training.</p>
+    
+  <figure class="fig">
+    <img src="../images/emergence/emergence-1.png" alt="Emergence is random and abrupt, and coincides with attention pattern learning">
+    <figcaption><b>Language model capabilities emerge randomly and abruptly due to learning core attention patterns.</b> Left: models with different initialization seeds learn a repetition task at random points throughout training; larger models consistently learn faster on average (dashed line). Models marked with a grey X did not solve the task by the end of training. Right: the model's correct token probability abruptly spikes during training, which coincides with learning relevant attention patterns.
+    </figcaption>
+  </figure>
+
+  <p>We apply a causal head ablation, where we take the attention scores of a single attention head in the "new" model (after the point of emergence) and patch them into the "old" model. The old model effectively gets to peek at the attention pattern the new model learned; the exact implementation details are provided in our paper. For each individual attention head we measure how the old model's correctness probability increases when we patch in the pattern from the new model. In the top right of Figure 1, we show two attention heads with the largest probability delta around the point of emergence. These actually correspond to the model learning very interpretable patterns relevant to the copying task! Note that simply patching these two attention heads into the old model is enough to recover most of the performance increase, confirming that learning these patterns <i>causes</i> the capability to emerge. The abrupt emergence of the copying capability is a lot less mysterious now: we can trace it down to the model learning attention patterns that are directly relevant to the task.</p>
+
+  <p>These results offer an explanation as to why language model capabilities are so seed-dependent in the first place. If a capability depends so heavily on learning specific attention patterns, and these patterns emerge abruptly, then model initialization should play a massive role in whether a model can "discover" such patterns. But we still want to figure out another detail: why are larger models more efficient in this pattern discovery?</p>
 
   <h2 id="synthetic">Controlling Attention Pattern Learning With Synthetic Tasks</h2>
 
-  <p>ok we saw in pythia models there are interpretable patterns we discover on some real tasks. but we don't really know a ground truth in advance. so hard to study factors in detail. so we move to synthetic tasks, we can control ctx length, sparsity, etc easily. in pythia we saw if there is a jump in performance, it corresponds to attention map learning. here we also see the same. TODO add the 3 context length / sparsity figures</p>
-
-  <h2 id="arch">How Architectures Affect Attention Pattern Learning</h2>
-
-  <p>results on heads, mlp mixer, etc</p>
-
-  <h2 id="discussion">Future Directions</h2>
-
-  <p>we saw emergence is bottlenecked by attention pattern learning, which is esp hard for complex and long ctx. can we design better architectures, attention interventions for long ctx tasks, or distillation specifically for attention maps? since smaller models with less heads tend to struggle at capturing intricate patterns</p>
-
-  <figure class="fig">
-    <img src="../images/emergence/emergence-1.png" alt="Emergence is random and abrupt, and coincides with attention pattern learning">
-    <figcaption><b>Capabilities emerge randomly and abruptly as the model learns attention patterns.</b> Left: copies of the same model with different seeds learn a repetition task at scattered points in training, and larger models learn earlier on average (dashed line). The grey X marks models that never learned it. Right: the probability of the correct token stays flat and then spikes, exactly when two attention heads switch from looking everywhere to looking in the right place.</figcaption>
-  </figure>
+  <p>With Pythia models we demonstrate variable and sharp emergence on real natural language tasks (see Figure 2 of our paper for more examples), but our findings are purely observational. There is no single "ground-truth" attention pattern for modeling an entire pretraining dataset, so we cannot systematically control knobs like the difficulty of the task. We see that learning attention patterns is a key driver behind emergent capabilities, so to study the role of attention in isolation we introduce two synthetic tasks: linear maps and cellular automata.</p>
 
   <figure class="fig">
     <img src="../images/emergence/tasks-1.png" alt="Linear map and cellular automata tasks">
-    <figcaption><b>Two tasks where we know exactly where the model should look.</b> Each task transforms a row of cells into the next row. Orange cells are the ones that determine a single output cell. In the linear map task (left) each output is the parity of a fixed, scattered subset of inputs. In the cellular automata task (right) each output depends on a small local window. To solve either task, the model has to learn to attend to the orange cells.</figcaption>
+    <figcaption><b>Two synthetic tasks where we can exactly define the token dependencies between consecutive states.</b> Cells highlighted in orange indicate the relevant token positions for computing a single cell of the next state. Linear map state transitions compute the parity of a sparse subset of the previous state for each cell. Cellular automata state transitions depend on a deterministic lookup table indexed by a local window of cells. Learning both tasks involves attending to a specific set of cells in the previous state.</figcaption>
   </figure>
+
+  <p>In both tasks, we train the model on a trajectory of discrete-valued state vectors (flattened into a contiguous sequence). We generate a sequence by sampling a random initial state and iteratively applying a transition function. </p>
 
   <figure class="fig">
     <img src="../images/emergence/jumps-1.png" alt="Loss jumps correspond to learning rows of the ground-truth pattern">
-    <figcaption><b>Each jump in the loss is the model learning one more place to look.</b> The dashed line is the overall loss; the light blue lines are the losses on individual output cells. The cells fall one at a time, in sudden drops, and each drop lines up with two attention heads sharpening onto a single row of the true pattern.</figcaption>
+    <figcaption><b>Abrupt learning on the linear map task corresponds to learning rows of the ground-truth matrix.</b> We plot the aggregate loss curve (dashed) decomposed into loss on individual output tokens (light blue) for a 1-layer transformer. We highlight one loss jump in bold and find that it corresponds to a drop in entropy for two attention heads. We plot the averaged attention maps for these two heads at initialization, along with before and after the loss jump (steps 2500 and 3000 respectively). We see that the loss jump corresponds to two attention heads jointly learning a single row of the ground truth linear map.</figcaption>
   </figure>
+
+  <p>when we train on linear map, each jump corresponds to learning one part of the attention pattern. and this effect is distributed across heads. also, applying the intervention, where we bias the attention map towards the ground truth, significantly speeds up training, confirming that the loss plateaus are due to being bottlenecked by finding the attention pattern. note similarity to pythia: there we took the ground truth to be whatever the later model learned, here we know an exact ground truth</p>
+
+  <p>we can also vary how sparse the linear map is, ie how much of the previous state the model has to pay attention to for computing next state. medium sparsity = max possible combinations. this also ends up being the most difficult setting, so maybe the difficulty of the linear map is due to the model searching over all feasible attention patterns</p>
+  
+  <figure class="fig">
+    <div class="panels">
+      <img src="../images/emergence/states_linmap.png" alt="Linear map difficulty vs sparsity and state size">
+      <img src="../images/emergence/states_ca.png" alt="Cellular automata loss curves across state sizes">
+      <img src="../images/emergence/plateau.png" alt="Loss plateau length grows multiplicatively with state size">
+    </div>
+    <figcaption><b>Training dynamics become abrupt with longer context and medium sparsity.</b> We average training loss over three models trained with different seeds. Left: models can always learn very sparse or very dense attention patterns in the linear map task, but as we increase the state size medium-sparsity patterns become harder, and are unlearnable by <i>S</i>=32. Middle: given a fixed token batch size, increasing the state size <i>S</i> shifts the cellular automata loss dynamics from smooth to abrupt; biasing the attention scores toward the ground-truth pattern (dashed) recovers immediate learning even at <i>S</i>=512, where the model otherwise makes no progress. Right: the loss plateau lengthens multiplicatively with state size, but the attention intervention neutralizes the effect.</figcaption>
+  </figure>
+
+  <p>in eca, training dynamics are initially normal and smooth, but if we extend context length again there is a plateau (decreasing bsz so this is a token-matched comparison). and nothing changed about the algorithm. there is actually a multiplicative increase in plateau time wrt context length, but again we can neutralize this effect by intervening with an attention bias</p>
+
+  <h2 id="arch">How Architectures Affect Attention Pattern Learning</h2>
+
+  <p>results on heads, mlp mixer, etc. This is reminiscent of the <a href="https://arxiv.org/abs/1803.03635">lottery ticket hypothesis</a>; you can think of larger models having more "lottery tickets", where a lottery ticket corresponds to a single attention head that could potentially learn the task-relevent pattern.  </p>
+
+  <p>more heads beat bigger heads, better to scale that way. MLP mixer is better by an order of magnitude because of how its architecture can easily find positional patterns. but it is not better across the board, worse on cellular automata. and other archutectures are still worse.</p>
+
+  <h2 id="discussion">Future Directions</h2>
+
+  <p>we saw emergence is bottlenecked by attention pattern learning, which is esp hard for complex and long ctx. can we design better architectures, attention interventions for long ctx tasks, or distillation specifically for attention maps? since smaller models with less heads tend to struggle at capturing intricate patterns. tie this back to emergent capabilities, if it is specifically better at learning intricate attention patterns based on our results we expect this will lead to stronger capabilities</p>
+
 
   <figure class="fig">
     <img src="../images/emergence/width-1.png" alt="Scaling the number of heads improves learning">
