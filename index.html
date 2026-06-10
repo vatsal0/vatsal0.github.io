@@ -52,7 +52,7 @@
 
                 <p style="text-align:center">
                   <a href="mailto:vatsalbaherwani@gmail.com">Email</a> &nbsp;|&nbsp;
-                  <a href="data/VatsalBaherwaniCV.pdf">CV</a> &nbsp;|&nbsp;
+                  <!-- <a href="data/VatsalBaherwaniCV.pdf">CV</a> &nbsp;|&nbsp; -->
                   <a href="https://scholar.google.com/citations?user=sAV3TUoAAAAJ">Google Scholar</a> &nbsp;|&nbsp;
                   <a href="https://twitter.com/vatsalbaherwani">Twitter</a> &nbsp;|&nbsp;
                   <a href="https://github.com/vatsal0/">GitHub</a> &nbsp;|&nbsp;
@@ -91,14 +91,16 @@
                 <br>
                 Monte Hoover, <strong>Vatsal Baherwani</strong>, Neel Jain, Khalid Saifullah, Joseph Vincent, Chirag Jain, Melissa Kazemi Rad, C. Bayan Bruss, Ashwinee Panda, Tom Goldstein
                 <br>
-                <em>In Submission</em>
+                <em>ICLR 2026</em>
                 <br>
-                <!-- <a href="">project page</a>
-                /
-                <a href="">arXiv</a> -->
+                <a href="https://arxiv.org/abs/2509.02563">paper</a>
+                |
+                <a href="https://github.com/montehoover/DynaGuard">code</a>
+                |
+                <a href="https://huggingface.co/collections/tomg-group-umd/dynaguard">models</a>
                 <p></p>
                 <p>
-                We develop a guardian model that can dynamically adapt to ensure an LLM complies with arbitrary user-specified rules.
+                Guardian models are useful for monitoring the safety and quality of deployed LLMs, but prior models fail to properly enforce domain-specific guardrails. We develop a <i>dynamic</i> guardian model that adapts to arbitrary user-specified rules and constraints at runtime.
                 </p>
               </td>
             </tr>
@@ -108,19 +110,19 @@
               </td>
               <td style="padding:20px;width:75%;vertical-align:middle">
                 <a href="https://arxiv.org/abs/2504.12463">
-              <span class="papertitle">Dense Backpropagation Improves Routing for Sparsely-Gated Mixture-of-Experts</span>
+              <span class="papertitle">Dense Backpropagation Improves Training for Sparse Mixture-of-Experts</span>
                 </a>
                 <br>
                 Ashwinee Panda*, <strong>Vatsal Baherwani*</strong>, Zain Sarwar, Benjamin Therien, Supriyo Chakraborty, Tom Goldstein
                 <br>
                 <em>NeurIPS 2025</em>
                 <br>
-                <!-- <a href="">project page</a>
-                /
-                <a href="">arXiv</a> -->
+                <a href="https://arxiv.org/abs/2504.12463">paper</a>
+                |
+                <a href="https://github.com/vatsal0/default-moe">code</a>
                 <p></p>
                 <p>
-                We approximate the dense backward pass of a sparse mixture-of-experts model, leading to improved training stability and performance with negligible overhead.
+                One of the main challenges in training a very sparse mixture-of-experts model is that you only get to update a small subset of your parameters in each optimization step. We develop a method to train inactive experts by estimating their gradients, which leads to significant improvement in training speed with negligible computational overhead.
                 </p>
               </td>
             </tr>
