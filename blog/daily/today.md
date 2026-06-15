@@ -1,0 +1,3 @@
+# title: Velocity
+
+Velocity without direction is just noise. Imagine you could run as fast as a car, but with the caveat that every second you would need to take a sharp random turn and run in a different direction. More often than not you would just be running in circles around your starting point, and any meaningful progress you did make would eventually be erased. This is the consequence of lacking direction. You may cover ground, but in terms of net progress you barely move from where you started. 
