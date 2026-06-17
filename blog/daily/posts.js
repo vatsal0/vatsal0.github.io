@@ -1,6 +1,7 @@
 // Shared posts data and nav helpers for daily blog entries.
 // Add entries here when you post. Format: "YYYY-MM-DD": "Title"
 const posts = {
+  "2026-06-17": "Rejection",
   "2026-06-12": "Velocity",
   "2026-06-09": "Food & The Brain",
   "2026-06-08": "The Bad Days",
