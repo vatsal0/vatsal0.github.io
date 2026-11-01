@@ -1,0 +1,128 @@
+---
+// The homepage's background black hole: a fixed, viewport-sized layer behind the content.
+// A pre-rendered poster gives the instant first paint (and is the fallback when WebGL is unavailable);
+// the live WebGL canvas fades in over it once its first frame is ready, and the whole layer dims as you scroll.
+// Regenerate the posters after changing the shader or framing: `npm run poster` (needs `npm run dev`).
+import { getImage } from 'astro:assets';
+import portraitPoster from '../assets/blackhole/poster-portrait.png';
+import landscapePoster from '../assets/blackhole/poster-landscape.png';
+import { FRAMINGS, PORTRAIT_QUERY } from '../scripts/blackhole/framing';
+
+const variants = async (src: ImageMetadata, widths: number[]) => ({
+  avif: await getImage({ src, widths, format: 'avif', quality: 60 }),
+  webp: await getImage({ src, widths, format: 'webp', quality: 72 }),
+});
+const portrait = await variants(portraitPoster, [540, 810, 1080]);
+const landscape = await variants(landscapePoster, [960, 1440, 1920]);
+---
+
+<div class="blackhole" data-blackhole aria-hidden="true">
+  <picture>
+    <source media={PORTRAIT_QUERY} type="image/avif" srcset={portrait.avif.srcSet.attribute} sizes="100vw" />
+    <source media={PORTRAIT_QUERY} type="image/webp" srcset={portrait.webp.srcSet.attribute} sizes="100vw" />
+    <source type="image/avif" srcset={landscape.avif.srcSet.attribute} sizes="100vw" />
+    <source type="image/webp" srcset={landscape.webp.srcSet.attribute} sizes="100vw" />
+    <img
+      src={landscape.webp.src}
+      alt=""
+      width={FRAMINGS.landscape.width}
+      height={FRAMINGS.landscape.height}
+      fetchpriority="high"
+      decoding="async"
+    />
+  </picture>
+  <canvas></canvas>
+</div>
+<!-- The stretch of page where the black hole is worth animating; scrolled past it, rendering pauses. -->
+<div class="blackhole-zone" data-blackhole-zone></div>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-blackhole]');
+  const posterMode = import.meta.env.DEV && new URLSearchParams(location.search).get('poster');
+
+  if (root && posterMode) {
+    import('../scripts/blackhole/poster').then((m) => m.renderPoster(posterMode === 'portrait' ? 'portrait' : 'landscape'));
+  } else if (root) {
+    // The text never waits on this: fetch and start the shader only once the page is loaded and idle.
+    const zone = document.querySelector<HTMLElement>('[data-blackhole-zone]');
+    const start = () => import('../scripts/blackhole/main').then((m) => m.start(root, zone));
+    const idle = (cb: () => void) =>
+      'requestIdleCallback' in window ? requestIdleCallback(cb, { timeout: 2000 }) : setTimeout(cb, 300);
+    if (document.readyState === 'complete') idle(start);
+    else addEventListener('load', () => idle(start), { once: true });
+  }
+</script>
+
+<style>
+  .blackhole {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    /* The largest viewport, so the layer doesn't resize (and re-render) as mobile browser bars slide away. */
+    height: 100vh;
+    height: 100lvh;
+    z-index: -1;
+    pointer-events: none;
+    /* Browsers without scroll-driven animations get a fixed, readable dim level. */
+    opacity: 0.6;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .blackhole {
+      opacity: 1;
+      /* Longhands on purpose: the minifier folds a shorthand + animation-timeline into one invalid
+         \`animation\` declaration, which browsers then drop. */
+      animation-name: blackhole-recede;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(root);
+      animation-range: 0 85vh;
+    }
+  }
+
+  @keyframes blackhole-recede {
+    to {
+      opacity: 0.22;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .blackhole {
+      opacity: 0.45;
+    }
+  }
+
+  .blackhole-zone {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 110vh;
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  img,
+  canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  img {
+    object-fit: cover;
+  }
+
+
+  canvas {
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+
+  canvas:global(.is-live) {
+    opacity: 1;
+  }
+</style>

@@ -1,0 +1,15 @@
+{
+  "name": "vatsal0-github-io",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "poster": "node scripts/render-poster.mjs"
+  },
+  "dependencies": {
+    "astro": "^7.4.4"
+  }
+}

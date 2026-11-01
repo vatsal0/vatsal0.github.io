@@ -1,0 +1,57 @@
+---
+import Base from '../../layouts/Base.astro';
+import { formatShortDate, getPosts, isDaily, postUrl } from '../../lib/blog';
+
+const posts = await getPosts();
+const essays = posts.filter((p) => !isDaily(p));
+const daily = posts.filter(isDaily);
+
+// Research posts are standalone Distill pages in public/blog/.
+const research = [{ date: new Date('2026-06-25'), title: 'Why Language Model Capabilities Emerge Randomly', href: '/blog/emergence.html' }];
+---
+
+<Base title="Writing">
+  <div class="container">
+    <h1>Writing</h1>
+
+    <h2>Research</h2>
+    <ul class="entries">
+      {research.map((r) => <li><time datetime={r.date.toISOString().slice(0, 10)}>{formatShortDate(r.date)}</time> <a href={r.href}>{r.title}</a></li>)}
+    </ul>
+
+    <h2>Personal</h2>
+    <ul class="entries">
+      {essays.map((p) => <li><time datetime={p.data.date.toISOString().slice(0, 10)}>{formatShortDate(p.data.date)}</time> <a href={postUrl(p)}>{p.data.title}</a></li>)}
+    </ul>
+
+    <h2>Daily</h2>
+    <p class="muted">Shorter thoughts that I tried to post every day.</p>
+    <ul class="entries">
+      {daily.map((p) => <li><time datetime={p.data.date.toISOString().slice(0, 10)}>{formatShortDate(p.data.date)}</time> <a href={postUrl(p)}>{p.data.title}</a></li>)}
+    </ul>
+
+    <p>I also wrote some longer essays on <a href="https://medium.com/@vatsalbaherwani">Medium</a>.</p>
+  </div>
+</Base>
+
+<style>
+  .entries {
+    list-style: none;
+    padding: 0;
+  }
+
+  .entries li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding: 0.3rem 0;
+  }
+
+  time {
+    color: var(--text-muted);
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+</style>

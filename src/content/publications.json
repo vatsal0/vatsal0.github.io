@@ -1,0 +1,55 @@
+[
+  {
+    "id": "emergence",
+    "date": "2026-06-25",
+    "title": "Emergent Capabilities Arise Randomly from Learning Sparse Attention Patterns",
+    "authors": [
+      "Vatsal Baherwani",
+      "Zixi Chen",
+      "Shikai Qiu",
+      "Andrew Gordon Wilson",
+      "Pavel Izmailov"
+    ],
+    "venue": "NeurIPS",
+    "year": 2026,
+    "url": "/blog/emergence.html",
+    "links": [
+      {
+        "label": "paper",
+        "url": "https://arxiv.org/abs/2606.25010"
+      },
+      {
+        "label": "blog",
+        "url": "/blog/emergence.html"
+      }
+    ],
+    "summary": "What happens when a language model acquires a practical capability such as in-context learning? We show these behaviors correspond to abrupt changes in the attention mechanisms of the model, and various architectural interventions (including width scaling) can accelerate the emergence of these capabilities."
+  },
+  {
+    "id": "default-moe",
+    "date": "2025-04-16",
+    "title": "Dense Backpropagation Improves Training for Sparse Mixture-of-Experts",
+    "authors": [
+      "Ashwinee Panda*",
+      "Vatsal Baherwani*",
+      "Zain Sarwar",
+      "Benjamin Therien",
+      "Supriyo Chakraborty",
+      "Tom Goldstein"
+    ],
+    "venue": "NeurIPS",
+    "year": 2025,
+    "url": "https://arxiv.org/abs/2504.12463",
+    "links": [
+      {
+        "label": "paper",
+        "url": "https://arxiv.org/abs/2504.12463"
+      },
+      {
+        "label": "code",
+        "url": "https://github.com/vatsal0/default-moe"
+      }
+    ],
+    "summary": "One of the main challenges in training a very sparse mixture-of-experts model is that you only get to update a small subset of your parameters in each optimization step. We develop a method to train inactive experts by estimating their gradients, which leads to significant improvement in training speed with negligible computational overhead."
+  }
+]

@@ -1,0 +1,85 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { formatDate, getPosts, isDaily, postUrl, type Post } from '../../lib/blog';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  // Daily posts get prev/next links to their neighbours (posts are newest first).
+  const daily = posts.filter(isDaily);
+  return posts.map((post) => {
+    const i = daily.indexOf(post);
+    return {
+      params: { slug: post.id },
+      props: { post, newer: i > 0 ? daily[i - 1] : undefined, older: i >= 0 ? daily[i + 1] : undefined },
+    };
+  });
+}
+
+interface Props {
+  post: Post;
+  newer?: Post;
+  older?: Post;
+}
+
+const { post, newer, older } = Astro.props;
+const { Content } = await render(post);
+---
+
+<Base title={post.data.title}>
+  <article class="container">
+    <p class="back"><a href="/blog/">← Writing</a></p>
+    <h1>{post.data.title}</h1>
+    <p class="label"><time datetime={post.data.date.toISOString().slice(0, 10)}>{formatDate(post.data.date)}</time></p>
+    <div class="prose">
+      <Content />
+    </div>
+    {
+      (newer || older) && (
+        <nav class="post-nav" aria-label="More daily posts">
+          {older ? <a href={postUrl(older)} rel="prev">← {older.data.title}</a> : <span />}
+          {newer ? <a href={postUrl(newer)} rel="next">{newer.data.title} →</a> : <span />}
+        </nav>
+      )
+    }
+  </article>
+</Base>
+
+<style>
+  .back {
+    margin-bottom: 0;
+  }
+
+  .back a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  h1 {
+    font-size: clamp(1.75rem, 6vw, 2.4rem);
+    margin: var(--space-2) 0 var(--space-1);
+  }
+
+  .prose :global(p) {
+    margin: 0 0 1.1em;
+  }
+
+  .prose :global(.footnotes) {
+    margin-top: var(--space-4);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+
+  .post-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line);
+  }
+
+  .post-nav a:last-child {
+    text-align: right;
+  }
+</style>

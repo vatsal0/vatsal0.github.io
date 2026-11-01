@@ -1,0 +1,113 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description = 'Vatsal Baherwani, PhD student at NYU working on the science of deep learning.' } = Astro.props;
+const fullTitle = title ? `${title} · Vatsal Baherwani` : 'Vatsal Baherwani';
+const path = Astro.url.pathname.replace(/\.html$/, '');
+const nav = [
+  { href: '/', label: 'Home' },
+  { href: '/blog/', label: 'Writing' },
+  { href: '/books', label: 'Reading' },
+];
+const isCurrent = (href: string) => (href === '/' ? path === '/' || path === '/index' : path.startsWith(href));
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content="Vatsal Baherwani" />
+    <meta name="theme-color" content="#0a0b0f" />
+    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
+    <link rel="preload" href="/fonts/source-serif-4-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- GoatCounter analytics -->
+    <script is:inline data-goatcounter="https://vatsalb.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header container">
+      <nav aria-label="Main">
+        <ul>
+          {
+            nav.map((item) => (
+              <li>
+                <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </header>
+    <main id="main">
+      <slot />
+    </main>
+  </body>
+</html>
+
+<style>
+  .skip-link {
+    position: absolute;
+    left: var(--gutter);
+    top: -3rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-raised);
+    font-family: var(--font-ui);
+    z-index: 10;
+  }
+
+  .skip-link:focus {
+    top: 0.5rem;
+  }
+
+  .site-header {
+    position: relative;
+    z-index: 2;
+  }
+
+  .site-header ul {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    height: var(--header-h);
+  }
+
+  .site-header a {
+    font-family: var(--font-ui);
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    /* At least 44px tall tap targets on phones. */
+    display: inline-block;
+    padding: 0.7rem 0;
+  }
+
+  .site-header a:hover {
+    color: var(--text);
+  }
+
+  .site-header a[aria-current='page'] {
+    color: var(--text);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.45em;
+  }
+
+  main {
+    padding-bottom: var(--space-5);
+  }
+</style>

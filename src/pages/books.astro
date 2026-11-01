@@ -1,0 +1,570 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { inlineMarkdown } from '../lib/inline';
+import { layout, SKY, STAR_STYLE, type Rating } from '../lib/starmap';
+
+// Highest rated first; unrated (null) last. This order drives both the list and star placement.
+const books = (await getCollection('books'))
+  .map((b) => ({ id: b.id, ...b.data }))
+  .sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1) || a.title.localeCompare(b.title));
+
+const ids = books.map((b) => b.id);
+const wide = layout(ids, SKY.wide);
+const narrow = layout(ids, SKY.narrow);
+
+const look = (rating: number | null) => STAR_STYLE[(rating ?? 0) as Rating];
+const ratingText = (rating: number | null) => (rating === null ? null : `${rating} · ${STAR_STYLE[rating as Rating].label}`);
+const legend = ([5, 4, 3, 2, 1, 0] as Rating[]).map((r) => ({ rating: r, ...STAR_STYLE[r] }));
+---
+
+<Base title="Books" description="Books Vatsal has read, drawn as a star map.">
+  <div class="container">
+    <h1>Books</h1>
+    <p>
+      Each book here is a star. The more it meant to me, the brighter it burns.
+    </p>
+
+    <ul class="legend" aria-label="Legend">
+      {
+        legend.map((l) => (
+          <li>
+            <span class="dot" style={`--size:${l.size}px;--glow:${l.glow}px;--color:${l.color}`} aria-hidden="true" />
+            <span>
+              <strong>{l.rating}</strong> {l.label}
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="view-toggle" role="group" aria-label="View" data-view-toggle hidden>
+      <button type="button" data-view="map" aria-pressed="true">star map</button>
+      <button type="button" data-view="list" aria-pressed="false">list</button>
+    </div>
+  </div>
+
+  <div class="views" data-views>
+    <section class="sky-wrap" aria-label="Star map of books" data-map>
+      <p class="hint muted">Hover or tap a star.</p>
+      <div class="sky" data-sky>
+        {
+          books.map((b) => {
+            const w = wide.get(b.id)!;
+            const n = narrow.get(b.id)!;
+            const s = look(b.rating);
+            const cardH = w.x > 0.68 ? 'left' : w.x < 0.32 ? 'right' : 'center';
+            const cardV = w.y < 0.4 ? 'below' : 'above';
+            return (
+              <div
+                class:list={['book', `r${b.rating ?? 'x'}`, `h-${cardH}`, `v-${cardV}`]}
+                style={`--wx:${w.x.toFixed(4)};--wy:${w.y.toFixed(4)};--nx:${n.x.toFixed(4)};--ny:${n.y.toFixed(4)};--size:${s.size}px;--glow:${s.glow}px;--spike:${s.spike}px;--color:${s.color};--delay:${((w.x * 7 + w.y * 13) % 4).toFixed(2)}s`}
+              >
+                <button type="button" class="star" aria-expanded="false" aria-describedby={`card-${b.id}`}>
+                  <span class="dot" aria-hidden="true" />
+                  <span class="visually-hidden">{b.title}</span>
+                </button>
+                <div class="card" id={`card-${b.id}`} role="tooltip">
+                  <button type="button" class="close" data-close aria-label="Close">×</button>
+                  <p class="card-title">{b.link ? <a href={b.link}>{b.title}</a> : b.title}</p>
+                  <p class="card-author">{b.author}</p>
+                  <p class="card-rating">
+                    {ratingText(b.rating) ?? <span class="todo">TODO: rating</span>}
+                  </p>
+                  {b.blurb && <p class="card-blurb" set:html={inlineMarkdown(b.blurb)} />}
+                </div>
+              </div>
+            );
+          })
+        }
+      </div>
+    </section>
+
+    <section class="container book-list" aria-label="Books, highest rated first" data-list>
+      <ol>
+        {
+          books.map((b) => {
+            const s = look(b.rating);
+            return (
+              <li>
+                <span class="dot" style={`--size:${s.size}px;--glow:${s.glow}px;--color:${s.color}`} aria-hidden="true" />
+                <div>
+                  <p>
+                    {b.link ? <a href={b.link}>{b.title}</a> : <strong>{b.title}</strong>}
+                    <span class="muted"> · {b.author}</span>
+                  </p>
+                  <p class="list-rating">{ratingText(b.rating) ?? <span class="todo">TODO: rating</span>}</p>
+                  {b.blurb && <p set:html={inlineMarkdown(b.blurb)} />}
+                </div>
+              </li>
+            );
+          })
+        }
+      </ol>
+    </section>
+  </div>
+</Base>
+
+<script>
+  const views = document.querySelector<HTMLElement>('[data-views]');
+  const toggle = document.querySelector<HTMLElement>('[data-view-toggle]');
+  const sky = document.querySelector<HTMLElement>('[data-sky]');
+
+  // Map / list toggle. Without JS both are shown (the list is the accessible base).
+  if (views && toggle) {
+    const KEY = 'books-view';
+    const setView = (view: string) => {
+      views.dataset.view = view;
+      toggle.querySelectorAll<HTMLButtonElement>('button').forEach((b) => {
+        b.setAttribute('aria-pressed', String(b.dataset.view === view));
+      });
+      try {
+        localStorage.setItem(KEY, view);
+      } catch {}
+    };
+    let saved = 'map';
+    try {
+      saved = localStorage.getItem(KEY) === 'list' ? 'list' : 'map';
+    } catch {}
+    toggle.hidden = false;
+    setView(saved);
+    toggle.addEventListener('click', (e) => {
+      const view = (e.target as HTMLElement).closest<HTMLButtonElement>('button')?.dataset.view;
+      if (view) setView(view);
+    });
+  }
+
+  // Tapping a star pins its card open (a bottom sheet on phones); tap elsewhere, × or Escape closes it.
+  if (sky) {
+    const closeAll = () =>
+      sky.querySelectorAll('.book.open').forEach((b) => {
+        b.classList.remove('open');
+        b.querySelector('.star')?.setAttribute('aria-expanded', 'false');
+      });
+    sky.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-close]')) return closeAll();
+      const book = target.closest<HTMLElement>('.book');
+      if (!book || !target.closest('.star')) return;
+      const wasOpen = book.classList.contains('open');
+      closeAll();
+      if (!wasOpen) {
+        book.classList.add('open');
+        book.querySelector('.star')?.setAttribute('aria-expanded', 'true');
+      }
+    });
+    document.addEventListener('click', (e) => {
+      if (!sky.contains(e.target as Node)) closeAll();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeAll();
+    });
+  }
+</script>
+
+<style>
+  /* Shared star dot: --size, --glow and --color come from the rating. */
+  .dot {
+    display: block;
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 0%, var(--color) 45%, var(--color) 100%);
+    box-shadow:
+      0 0 calc(var(--glow) * 0.5) calc(var(--glow) * 0.1) var(--color),
+      0 0 var(--glow) calc(var(--glow) * 0.25) color-mix(in srgb, var(--color) 45%, transparent);
+    flex-shrink: 0;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.25rem;
+    list-style: none;
+    padding: 0;
+    margin: var(--space-3) 0;
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .legend li {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .legend li > span:first-child {
+    /* keep the text aligned no matter the dot size */
+    margin-inline: calc((16px - var(--size)) / 2);
+  }
+
+  .legend strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .view-toggle {
+    display: inline-flex;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px;
+    margin-bottom: var(--space-2);
+  }
+
+  .view-toggle button {
+    font: 0.85rem var(--font-ui);
+    color: var(--text-muted);
+    background: none;
+    border: 0;
+    border-radius: 999px;
+    padding: 0.55rem 1rem;
+    cursor: pointer;
+  }
+
+  .view-toggle button[aria-pressed='true'] {
+    background: var(--bg-raised);
+    color: var(--text);
+  }
+
+  .views[data-view='map'] [data-list],
+  .views[data-view='list'] [data-map] {
+    display: none;
+  }
+
+  /* ----- star map ----- */
+
+  /* Same column as the text above. */
+  .sky-wrap {
+    max-width: calc(var(--measure) + 2 * var(--gutter));
+    margin: 0 auto;
+    padding-inline: var(--gutter);
+  }
+
+  .hint {
+    font: 0.85rem var(--font-ui);
+    margin: 0 0 var(--space-1);
+  }
+
+  .sky {
+    position: relative;
+    /* Phones: a tall scrolling sky (same aspect as SKY.narrow in starmap.ts). */
+    aspect-ratio: 360 / 1180;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background:
+      radial-gradient(ellipse 60% 40% at 30% 35%, rgb(142 197 255 / 0.05), transparent 70%),
+      radial-gradient(ellipse 50% 40% at 75% 70%, rgb(122 18 20 / 0.12), transparent 70%),
+      rgb(10 11 15 / 0.55);
+  }
+
+  .book {
+    position: absolute;
+    left: calc(var(--nx) * 100%);
+    top: calc(var(--ny) * 100%);
+    /* Center the 44px star on its point with margins, not a transform: a transformed ancestor would
+       trap the phone bottom sheet (position: fixed) inside the star. */
+    margin: -22px 0 0 -22px;
+  }
+
+  .book:hover,
+  .book:focus-within,
+  .book.open {
+    z-index: 5;
+  }
+
+  .star {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    cursor: pointer;
+  }
+
+  .star .dot {
+    /* above the spikes, which are the button's own ::before/::after */
+    position: relative;
+    z-index: 1;
+    animation: twinkle 3.6s ease-in-out var(--delay) infinite;
+    transition: transform 0.2s;
+  }
+
+  .star:hover .dot,
+  .star:focus-visible .dot,
+  .book.open .dot {
+    transform: scale(1.35);
+  }
+
+  /* Diffraction spikes, like stars in a telescope photo; longer for higher ratings (--spike). */
+  .star::before,
+  .star::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--spike);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color), transparent);
+    transform: translate(-50%, -50%);
+    opacity: 0.75;
+    pointer-events: none;
+  }
+
+  .star::after {
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+
+  /* Life-changing books should jump off the screen: a big pulsing blue halo, thicker spikes,
+     and a second, shorter set of diagonal spikes. */
+  .r5 .star::before,
+  .r5 .star::after {
+    height: 2px;
+    opacity: 1;
+  }
+
+  .r5 .dot {
+    position: relative;
+    background: radial-gradient(circle, #fff 0%, #fff 30%, var(--color) 70%);
+    box-shadow:
+      0 0 6px 2px #fff,
+      0 0 18px 6px var(--color),
+      0 0 48px 18px color-mix(in srgb, var(--color) 45%, transparent),
+      0 0 90px 36px color-mix(in srgb, var(--color) 18%, transparent);
+    animation: pulse 3s ease-in-out var(--delay) infinite;
+  }
+
+  .r5 .dot::before,
+  .r5 .dot::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: calc(var(--spike) * 0.5);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #fff, transparent);
+    transform: translate(-50%, -50%) rotate(45deg);
+    opacity: 0.8;
+  }
+
+  .r5 .dot::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+
+  @keyframes pulse {
+    50% {
+      transform: scale(1.18);
+      filter: brightness(1.25);
+    }
+  }
+
+  .r5 .star:hover .dot,
+  .r5 .star:focus-visible .dot,
+  .book.r5.open .dot {
+    animation: none;
+    transform: scale(1.35);
+  }
+
+  /* Dead stars don't twinkle. Unrated ones are hollow so they can't be mistaken for "haven't read". */
+  .r0 .dot {
+    animation: none;
+  }
+
+  .rx .dot {
+    animation: none;
+    background: none;
+    border: 1px dashed var(--text-muted);
+    box-shadow: none;
+    width: 9px;
+    height: 9px;
+  }
+
+  @keyframes twinkle {
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  /* Card: a popover next to the star on hover devices, a bottom sheet on touch / small screens. */
+  .card {
+    position: absolute;
+    width: max-content;
+    max-width: 17rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid rgb(245 185 139 / 0.25);
+    border-radius: 12px;
+    background: var(--bg-raised);
+    box-shadow: 0 10px 30px rgb(0 0 0 / 0.55);
+    font-size: 0.95rem;
+    line-height: 1.45;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.15s,
+      visibility 0.15s;
+  }
+
+  .book.open .card,
+  .star:focus-visible + .card {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  @media (hover: hover) {
+    .book:hover .card {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+
+  .card p {
+    margin: 0;
+  }
+
+  .card-title {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    padding-right: 1.5rem;
+  }
+
+  .card-author {
+    color: var(--text-muted);
+  }
+
+  .card-rating {
+    margin-top: 0.35rem !important;
+    font: 0.85rem var(--font-ui);
+    color: var(--color);
+  }
+
+  .r0 .card-rating {
+    color: var(--text-muted);
+  }
+
+  .card-blurb {
+    margin-top: 0.5rem !important;
+  }
+
+  .close {
+    position: absolute;
+    top: 0.2rem;
+    right: 0.3rem;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    background: none;
+    color: var(--text-muted);
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    display: none;
+  }
+
+  /* Bottom sheet on phones and touch screens. */
+  @media (max-width: 640px), (hover: none) {
+    .card {
+      position: fixed;
+      left: var(--gutter);
+      right: var(--gutter);
+      bottom: var(--gutter);
+      max-width: none;
+      width: auto;
+      padding: 1rem 1.1rem 1.1rem;
+      transform: translateY(12px);
+      transition:
+        opacity 0.18s,
+        visibility 0.18s,
+        transform 0.18s;
+    }
+
+    .book.open .card {
+      transform: none;
+    }
+
+    .close {
+      display: block;
+    }
+  }
+
+  /* Wider screens: the landscape layout, with the card placed beside its star. */
+  @media (min-width: 641px) {
+    .sky {
+      aspect-ratio: 680 / 560;
+    }
+
+    .book {
+      left: calc(var(--wx) * 100%);
+      top: calc(var(--wy) * 100%);
+    }
+
+  }
+
+  @media (min-width: 641px) and (hover: hover) {
+    .v-above .card {
+      bottom: calc(100% + 4px);
+    }
+
+    .v-below .card {
+      top: calc(100% + 4px);
+    }
+
+    .h-center .card {
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .h-left .card {
+      right: 0;
+    }
+
+    .h-right .card {
+      left: 0;
+    }
+  }
+
+  /* ----- list view ----- */
+
+  .book-list {
+    margin-top: var(--space-4);
+  }
+
+  .views[data-view='list'] .book-list {
+    margin-top: 0;
+  }
+
+  .book-list ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .book-list li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    padding: 0.55rem 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .book-list li:first-child {
+    border-top: 0;
+  }
+
+  .book-list li > .dot {
+    /* center dots of every size in the same 16px column */
+    margin-inline: calc((16px - var(--size)) / 2);
+    transform: translateY(-2px);
+  }
+
+  .book-list p {
+    margin: 0;
+  }
+
+  .list-rating {
+    font: 0.85rem var(--font-ui);
+    color: var(--text-muted);
+  }
+</style>

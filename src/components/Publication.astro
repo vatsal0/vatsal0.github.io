@@ -1,0 +1,86 @@
+---
+import type { CollectionEntry } from 'astro:content';
+// import { inlineMarkdown } from '../lib/inline';
+
+interface Props {
+  pub: CollectionEntry<'publications'>['data'];
+}
+
+const { pub } = Astro.props;
+const isMe = (name: string) => name.replace(/\*$/, '') === 'Vatsal Baherwani';
+const hasEqualContribution = pub.authors.some((a) => a.endsWith('*'));
+---
+
+<article class="pub">
+  <p class="label">{pub.venue} {pub.year}</p>
+  <h3><a href={pub.url}>{pub.title}</a></h3>
+  <p class="authors">
+    {
+      pub.authors.map((name, i) => {
+        const sep = i < pub.authors.length - 1 ? ', ' : '';
+        return isMe(name) ? <><strong>{name}</strong>{sep}</> : name + sep;
+      })
+    }
+    {hasEqualContribution && <span class="visually-hidden"> (* equal contribution)</span>}
+  </p>
+  <p class="links">
+    {
+      pub.links.map((link, i) => (
+        <>
+          <a href={link.url}>{link.label}</a>
+          {i < pub.links.length - 1 && <span aria-hidden="true"> · </span>}
+        </>
+      ))
+    }
+  </p>
+  {/* Summaries are hidden for now; they're still in publications.json.
+  <p class="summary" set:html={inlineMarkdown(pub.summary)} /> */}
+</article>
+
+<style>
+  .pub {
+    padding-block: var(--space-3);
+    border-top: 1px solid var(--line);
+  }
+
+  .pub:first-of-type {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+    margin: 0.3rem 0 0.4rem;
+  }
+
+  h3 a {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  h3 a:hover {
+    color: var(--accent-strong);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+  }
+
+  p {
+    margin: 0;
+  }
+
+  .authors {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  .authors strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .links {
+    margin-top: 0.4rem;
+    font-family: var(--font-ui);
+    font-size: 0.9rem;
+  }
+</style>

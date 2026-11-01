@@ -1,0 +1,376 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Publication from '../components/Publication.astro';
+import BlackHole from '../components/BlackHole.astro';
+import headshot from '../assets/headshot.jpeg';
+
+const publications = (await getCollection('publications')).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+// TODO(vatsal): fill in once the Instagram page has posts, then uncomment the dunking item below.
+const INSTAGRAM_URL = '';
+const BELI_URL = 'https://beliapp.co/profile/vatsalb';
+
+const links = [
+  { label: 'Email', href: 'mailto:vatsalbaherwani@gmail.com' },
+  { label: 'Google Scholar', href: 'https://scholar.google.com/citations?user=sAV3TUoAAAAJ' },
+  { label: 'Twitter', href: 'https://twitter.com/vatsalbaherwani' },
+  { label: 'GitHub', href: 'https://github.com/vatsal0/' },
+  { label: 'LinkedIn', href: 'https://linkedin.com/in/vatsal-baherwani' },
+];
+---
+
+<Base>
+  <BlackHole />
+
+  <div class="home container">
+    <div class="whats" data-whats>
+      <button type="button" aria-expanded="false" aria-controls="whats-blurb">
+        <span class="star" aria-hidden="true"></span>what's all this?
+      </button>
+      <p id="whats-blurb" class="blurb" role="note">I think black holes are the coolest thing ever.</p>
+    </div>
+
+    <header class="intro panel">
+      <h1>Vatsal Baherwani</h1>
+    </header>
+
+    <section class="panel" aria-labelledby="about">
+      <h2 id="about">about me</h2>
+      <Image
+        src={headshot}
+        alt="Vatsal smiling"
+        widths={[112, 224, 280]}
+        sizes="(min-width: 640px) 140px, 112px"
+        class="headshot"
+        loading="eager"
+      />
+
+      <p>
+        Hey there, I'm Vatsal, a PhD student currently living in New York. I work with
+        <a href="https://izmailovpavel.github.io/">Pavel Izmailov</a> and
+        <a href="https://cims.nyu.edu/~andrewgw/">Andrew Gordon Wilson</a> at NYU, and I am also grateful to be supported
+        by the
+        <a href="https://engineering.nyu.edu/news/ten-nyu-tandon-students-named-2026-nsf-graduate-research-fellows">NSF Graduate Research Fellowship</a>.
+      </p>
+
+      <p>
+        This past summer I interned at <a href="https://qlabs.sh/">Q Labs</a> in San Francisco, where I researched scalable methods for
+        synthetic data generation, specifically for language models. The summer before that, I was a visiting researcher
+        at the <a href="https://humancompatible.ai/">Center for Human-Compatible AI</a> at UC Berkeley, working with
+        <a href="https://rajivmovva.com/">Raj Movva</a> and
+        <a href="https://people.eecs.berkeley.edu/~emmapierson/">Emma Pierson</a> on practical applications for ML
+        interpretability.
+      </p>
+
+      <p>
+        I previously graduated with a bachelor's degree from the University of Maryland, where I was fortunate to work
+        with <a href="https://www.rhsmith.umd.edu/directory/albert-pete-kyle">Pete Kyle</a> (who first introduced me to
+        academic research), <a href="https://www.cs.umd.edu/~abhinav/">Abhinav Shrivastava</a>,
+        <a href="https://kiddyboots216.github.io/">Ashwinee Panda</a>, and
+        <a href="https://www.cs.umd.edu/~tomg/">Tom Goldstein</a>.
+      </p>
+    </section>
+
+    <section class="panel" aria-labelledby="research">
+      <h2 id="research">research</h2>
+      <p>
+        I am broadly interested in developing a scientific understanding of deep learning; some specific topics I have
+        been exploring recently are emergent capabilities in language models, applying AI for scientific discovery, and generating synthetic data for pretraining.
+      </p>
+      <h3 class="subheading">selected publications</h3>
+      {publications.map((p) => <Publication pub={p.data} />)}
+    </section>
+
+    <section class="panel" aria-labelledby="more">
+      <h2 id="more">more about me</h2>
+      <ul class="tidbits">
+        <li>
+          I used to write <a href="/blog/">daily blog posts</a>, although I don't as often anymore because I am trying to
+          transition into creating a social media vlogging page instead.
+        </li>
+        {/* Hidden until the Instagram page has posts.
+        <li>
+          As a kid, I always wanted to be able to fly. Although the laws of physics inevitably humbled me, I've still made
+          some pretty good progress: <a href={INSTAGRAM_URL}>escape velocity</a>
+        </li>
+        */}
+        <li>
+          I love food. If you can recommend a good restaurant in NYC, please contact me.
+          <a href={BELI_URL}>I will gladly return the favor</a>.
+        </li>
+        <li>Recently, I have been learning to sing and dance (specifically Bollywood dance). If you know of any fun dance classes/events in NYC let me know!</li>
+        <li>
+          I really enjoy reading about human nature, the brain, and consciousness. Here's
+          <a href="/books">what my bookshelf looks like</a>.
+        </li>
+      </ul>
+    </section>
+
+    <section class="panel" aria-labelledby="links">
+      <h2 id="links">links</h2>
+      <ul class="links">
+        {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+      </ul>
+    </section>
+  </div>
+</Base>
+
+<script>
+  // Tap support for "what's all this?" (hover and focus are handled in CSS).
+  const whats = document.querySelector<HTMLElement>('[data-whats]');
+  const button = whats?.querySelector('button');
+  if (whats && button) {
+    const setOpen = (open: boolean) => button.setAttribute('aria-expanded', String(open));
+    button.addEventListener('click', () => setOpen(button.getAttribute('aria-expanded') !== 'true'));
+    document.addEventListener('click', (e) => {
+      if (!whats.contains(e.target as Node)) setOpen(false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    });
+  }
+</script>
+
+<style>
+  /* Everything here sits over the black hole. A tight dark halo (like film subtitles) helps everywhere,
+     and each section sits in a dark glass box while the black hole is bright. */
+  .home {
+    padding-top: var(--space-1);
+    text-shadow:
+      0 0 2px var(--bg),
+      0 0 8px rgb(10 11 15 / 0.8);
+  }
+
+  .panel {
+    margin-bottom: var(--space-3);
+    padding: var(--space-3) var(--space-2);
+    border: 1px solid rgb(245 185 139 / 0.16);
+    border-radius: 14px;
+    background: rgb(10 11 15 / 0.66);
+  }
+
+  .intro.panel {
+    padding-block: 0.75rem;
+  }
+
+  .panel > :global(:first-child) {
+    margin-top: 0;
+  }
+
+  .panel > :global(:last-child) {
+    margin-bottom: 0;
+  }
+
+  /* The boxes fade out on the same scroll range the black hole dims over (see BlackHole.astro),
+     so once the background has receded the page is just text on the sky. */
+  @supports (animation-timeline: scroll()) {
+    .panel {
+      /* Longhands on purpose; see the note in BlackHole.astro. */
+      animation-name: panel-recede;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(root);
+      animation-range: 0 85vh;
+    }
+  }
+
+  @keyframes panel-recede {
+    to {
+      background: rgb(10 11 15 / 0);
+      border-color: rgb(245 185 139 / 0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .panel {
+      background: rgb(10 11 15 / 0.5);
+    }
+  }
+
+  /* Same type as the section headings (h2), just bigger. */
+  .intro h1 {
+    font-size: clamp(2.5rem, 11vw, 4rem);
+    line-height: 1.05;
+    margin: 0;
+  }
+
+  /* "what's all this?": a small star just above the title box; hover, focus or tap shows the blurb. */
+  .whats {
+    position: relative;
+    display: flex;
+    justify-content: flex-end;
+    margin: 0 var(--space-1) 0.25rem;
+  }
+
+  .whats button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.25rem;
+    border: 0;
+    background: none;
+    color: var(--text-muted);
+    font: 0.9rem var(--font-ui);
+    text-shadow: inherit;
+    cursor: pointer;
+  }
+
+  .whats button:hover,
+  .whats button[aria-expanded='true'] {
+    color: var(--text);
+  }
+
+  .whats .star {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-strong);
+    box-shadow: 0 0 8px 2px rgb(245 185 139 / 0.7);
+    animation: twinkle 2.4s ease-in-out infinite;
+  }
+
+  @keyframes twinkle {
+    50% {
+      opacity: 0.45;
+      box-shadow: 0 0 4px 1px rgb(245 185 139 / 0.4);
+    }
+  }
+
+  .blurb {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 3;
+    width: max-content;
+    max-width: min(18rem, calc(100vw - 2 * var(--gutter)));
+    margin: 0;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid rgb(245 185 139 / 0.25);
+    border-radius: 10px;
+    background: var(--bg-raised);
+    font-size: 0.95rem;
+    line-height: 1.45;
+    text-shadow: none;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition:
+      opacity 0.15s,
+      transform 0.15s,
+      visibility 0.15s;
+  }
+
+  .whats button:focus-visible + .blurb,
+  .whats button[aria-expanded='true'] + .blurb {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+
+  /* Only real hover devices: on touch screens a tap leaves :hover stuck, so taps use the toggle instead. */
+  @media (hover: hover) {
+    .whats:hover .blurb {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+    }
+  }
+
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  /* A tiny glowing "star" before each section name. */
+  h2::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-strong);
+    box-shadow: 0 0 10px 2px rgb(245 185 139 / 0.6);
+    flex-shrink: 0;
+  }
+
+  .subheading {
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin: var(--space-4) 0 var(--space-2);
+  }
+
+  .headshot {
+    float: right;
+    width: 112px;
+    height: 112px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin: 0.3rem 0 var(--space-2) var(--space-2);
+    /* A thin photon ring. */
+    box-shadow:
+      0 0 0 2px var(--bg),
+      0 0 0 3px rgb(245 185 139 / 0.6),
+      0 0 24px rgb(245 185 139 / 0.25);
+  }
+
+  .tidbits {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-3) 0 0;
+  }
+
+  .tidbits li {
+    position: relative;
+    padding-left: 1.6rem;
+    margin-bottom: var(--space-2);
+  }
+
+  .tidbits li::before {
+    content: '✦';
+    position: absolute;
+    left: 0;
+    top: 0.1em;
+    color: var(--gold);
+    font-size: 0.85em;
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-3);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-family: var(--font-ui);
+  }
+
+  .links a {
+    display: inline-block;
+    padding: 0.6rem 0;
+  }
+
+  @media (min-width: 640px) {
+    .home {
+      padding-top: var(--space-3);
+    }
+
+    .panel {
+      padding: var(--space-4);
+    }
+
+    .intro.panel {
+      padding-block: var(--space-2);
+    }
+
+    .headshot {
+      width: 140px;
+      height: 140px;
+    }
+  }
+</style>

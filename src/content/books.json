@@ -1,0 +1,170 @@
+[
+  {
+    "id": "discipline-equals-freedom",
+    "title": "Discipline Equals Freedom",
+    "author": "Jocko Willink",
+    "rating": 1
+  },
+  {
+    "id": "principles-life-and-work",
+    "title": "Principles: Life and Work",
+    "author": "Ray Dalio",
+    "rating": 3
+  },
+  {
+    "id": "can-t-hurt-me",
+    "title": "Can't Hurt Me",
+    "author": "David Goggins",
+    "rating": 4
+  },
+  {
+    "id": "rework",
+    "title": "Rework",
+    "author": "Jason Fried & David Heinemeier Hansson",
+    "rating": 3
+  },
+  {
+    "id": "zero-to-one",
+    "title": "Zero to One",
+    "author": "Peter Thiel",
+    "rating": 2
+  },
+  {
+    "id": "blink",
+    "title": "Blink",
+    "author": "Malcolm Gladwell",
+    "rating": 3
+  },
+  {
+    "id": "the-tipping-point",
+    "title": "The Tipping Point",
+    "author": "Malcolm Gladwell",
+    "rating": 3
+  },
+  {
+    "id": "the-charisma-myth",
+    "title": "The Charisma Myth",
+    "author": "Olivia Fox Cabane",
+    "rating": 4
+  },
+  {
+    "id": "winning",
+    "title": "Winning",
+    "author": "Tim S. Grover",
+    "rating": 5
+  },
+  {
+    "id": "antifragile",
+    "title": "Antifragile",
+    "author": "Nassim Nicholas Taleb",
+    "rating": 4
+  },
+  {
+    "id": "the-road-less-traveled",
+    "title": "The Road Less Traveled",
+    "author": "M. Scott Peck",
+    "rating": 3
+  },
+  {
+    "id": "talking-to-strangers",
+    "title": "Talking to Strangers",
+    "author": "Malcolm Gladwell",
+    "rating": 4
+  },
+  {
+    "id": "outliers",
+    "title": "Outliers",
+    "author": "Malcolm Gladwell",
+    "rating": 4
+  },
+  {
+    "id": "meditations",
+    "title": "Meditations",
+    "author": "Marcus Aurelius",
+    "rating": 4
+  },
+  {
+    "id": "the-last-lecture",
+    "title": "The Last Lecture",
+    "author": "Randy Pausch",
+    "rating": 1
+  },
+  {
+    "id": "how-to-win-friends-influence-people",
+    "title": "How to Win Friends & Influence People",
+    "author": "Dale Carnegie",
+    "rating": 2
+  },
+  {
+    "id": "range",
+    "title": "Range",
+    "author": "David Epstein",
+    "rating": 3
+  },
+  {
+    "id": "david-and-goliath",
+    "title": "David and Goliath",
+    "author": "Malcolm Gladwell",
+    "rating": 4
+  },
+  {
+    "id": "the-surrender-experiment",
+    "title": "The Surrender Experiment",
+    "author": "Michael A. Singer",
+    "rating": 0
+  },
+  {
+    "id": "the-courage-to-be-disliked",
+    "title": "The Courage to Be Disliked",
+    "author": "Ichiro Kishimi & Fumitake Koga",
+    "rating": 4
+  },
+  {
+    "id": "silence-in-the-age-of-noise",
+    "title": "Silence: In the Age of Noise",
+    "author": "Erling Kagge",
+    "rating": 3
+  },
+  {
+    "id": "braided-creek",
+    "title": "Braided Creek",
+    "author": "Ted Kooser & Jim Harrison",
+    "rating": 0
+  },
+  {
+    "id": "attached",
+    "title": "Attached",
+    "author": "Amir Levine & Rachel Heller",
+    "rating": 4
+  },
+  {
+    "id": "empire-of-ai",
+    "title": "Empire of AI",
+    "author": "Karen Hao",
+    "rating": 0
+  },
+  {
+    "id": "the-subtle-art-of-not-giving-a-f-ck",
+    "title": "The Subtle Art of Not Giving a F*ck",
+    "author": "Mark Manson",
+    "rating": 3
+  },
+  {
+    "id": "a-life-of-meaning",
+    "title": "A Life of Meaning",
+    "author": "James Hollis",
+    "rating": 3
+  },
+  {
+    "id": "man-and-his-symbols",
+    "title": "Man and His Symbols",
+    "author": "Carl G. Jung",
+    "rating": 0
+  },
+  {
+    "id": "the-untethered-soul",
+    "title": "The Untethered Soul",
+    "author": "Michael A. Singer",
+    "rating": 5
+  }
+]
