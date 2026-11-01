@@ -1,0 +1,147 @@
+---
+import { geoNaturalEarth1, geoPath, geoGraticule10 } from 'd3-geo';
+import { feature } from 'topojson-client';
+import type { Topology, GeometryCollection } from 'topojson-specification';
+import world from 'world-atlas/countries-110m.json';
+import worldUrl from 'world-atlas/countries-110m.json?url';
+import Base from '../layouts/Base.astro';
+import { AS_OF, VISITED } from '../data/travel';
+
+// Flat map, drawn once at build time: the no-JS / screen-reader base under the globe.
+const topology = world as unknown as Topology<{ countries: GeometryCollection<{ name: string }> }>;
+const countries = feature(topology, topology.objects.countries).features;
+const visitedIds = new Set(VISITED.map((c) => c.id));
+for (const id of visitedIds) {
+  if (!countries.some((c) => c.id === id)) throw new Error(`travel: no country with id ${id} in world-atlas`);
+}
+
+const WIDTH = 960;
+const HEIGHT = 500;
+const projection = geoNaturalEarth1().fitExtent(
+  [
+    [4, 4],
+    [WIDTH - 4, HEIGHT - 4],
+  ],
+  { type: 'Sphere' },
+);
+const path = geoPath(projection);
+const sphere = path({ type: 'Sphere' })!;
+const graticule = path(geoGraticule10())!;
+const shapes = countries
+  .map((c) => ({ d: path(c), visited: visitedIds.has(String(c.id)), name: c.properties.name }))
+  .filter((s): s is { d: string; visited: boolean; name: string } => !!s.d);
+---
+
+<Base title="Travel" description="Countries Vatsal has been to.">
+  <div class="container">
+    <h1>Travel</h1>
+    <p>Places I've been so far. Drag or swipe the globe to spin it.</p>
+
+    <figure class="world" data-world data-src={worldUrl} data-visited={[...visitedIds].join(',')}>
+      <svg class="flat" viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-labelledby="map-title">
+        <title id="map-title">World map with the countries Vatsal has visited highlighted</title>
+        <path class="sphere" d={sphere} />
+        <path class="graticule" d={graticule} />
+        {shapes.map((s) => <path class:list={['country', { visited: s.visited }]} d={s.d}><title>{s.name}</title></path>)}
+      </svg>
+      <canvas class="globe" aria-hidden="true"></canvas>
+    </figure>
+
+    <h2 class="list-heading">{VISITED.length} countries as of {AS_OF}</h2>
+    <ul class="countries">
+      {VISITED.map((c) => <li>{c.name}</li>)}
+    </ul>
+  </div>
+</Base>
+
+<script>
+  const figure = document.querySelector<HTMLElement>('[data-world]');
+  if (figure) {
+    // Load the globe after the page is idle; the flat map is already there.
+    const go = () => import('../scripts/globe').then((m) => m.startGlobe(figure));
+    if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 2000 });
+    else setTimeout(go, 300);
+  }
+</script>
+
+<style>
+  .world {
+    position: relative;
+    margin: var(--space-3) 0 var(--space-4);
+  }
+
+  .flat {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .sphere {
+    fill: rgb(20 20 26 / 0.7);
+    stroke: rgb(245 185 139 / 0.25);
+  }
+
+  .graticule {
+    fill: none;
+    stroke: rgb(245 185 139 / 0.07);
+  }
+
+  .country {
+    fill: #1d1d24;
+    stroke: rgb(245 185 139 / 0.4);
+    stroke-width: 0.5;
+  }
+
+  .country.visited {
+    fill: var(--salmon);
+    stroke: var(--salmon-line);
+  }
+
+  /* When the globe is ready it replaces the flat map. */
+  .globe {
+    display: none;
+    width: 100%;
+    max-width: 560px;
+    aspect-ratio: 1;
+    margin: 0 auto;
+    touch-action: none;
+    cursor: grab;
+    border-radius: 50%;
+    /* faint atmosphere */
+    box-shadow: 0 0 60px 4px rgb(245 185 139 / 0.12);
+  }
+
+  .globe:active {
+    cursor: grabbing;
+  }
+
+  .world:global(.has-globe) .globe {
+    display: block;
+  }
+
+  .world:global(.has-globe) .flat {
+    display: none;
+  }
+
+  .list-heading {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-bottom: var(--space-1);
+  }
+
+  .countries {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .countries li {
+    padding: 0.3rem 0.8rem;
+    border: 1px solid rgb(245 185 139 / 0.3);
+    border-radius: 999px;
+    font: 0.9rem var(--font-ui);
+  }
+</style>
