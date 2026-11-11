@@ -166,5 +166,11 @@
     "title": "The Untethered Soul",
     "author": "Michael A. Singer",
     "rating": 5
+  },
+  {
+    "id": "tao-te-ching",
+    "title": "Tao Te Ching",
+    "author": "Lao Tzu",
+    "rating": 3
   }
 ]
